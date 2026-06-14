@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LinguaFlow — AI Language Translator</title>
+  <meta name="description" content="Translate text instantly with LinguaFlow. Voice input, audio playback, history, and more." />
+
+  <!-- Google Fonts: Syne (display), Inter (body), JetBrains Mono (utility) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <!-- Phosphor Icons (lightweight, modern icon set) -->
+  <script src="https://unpkg.com/@phosphor-icons/web@2.1.1/src/index.js" defer></script>
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ============================================================
+       NAVBAR
+       Contains: logo, history toggle, theme toggle
+  ============================================================ -->
+  <nav class="navbar" role="navigation" aria-label="Main navigation">
+    <div class="nav-logo">
+      <span class="logo-icon">⟡</span>
+      <span class="logo-text">Lingua<span class="logo-accent">Flow</span></span>
+    </div>
+
+    <div class="nav-actions">
+      <!-- History panel toggle -->
+      <button class="nav-btn" id="historyToggleBtn" aria-label="View translation history" title="Translation History">
+        <i class="ph ph-clock-counter-clockwise"></i>
+        <span class="nav-btn-label">History</span>
+        <!-- Badge shows how many history items exist -->
+        <span class="history-badge" id="historyBadge" aria-live="polite">0</span>
+      </button>
+
+      <!-- Dark / Light mode toggle -->
+      <button class="nav-btn theme-btn" id="themeToggleBtn" aria-label="Toggle dark and light mode" title="Toggle Theme">
+        <i class="ph ph-moon" id="themeIcon"></i>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ============================================================
+       HERO TAGLINE
+       Sets emotional tone; animated gradient text headline
+  ============================================================ -->
+  <header class="hero" role="banner">
+    <p class="hero-eyebrow">Powered by AI Translation</p>
+    <h1 class="hero-title">
+      Every language,<br />
+      <span class="hero-gradient-text">one heartbeat away.</span>
+    </h1>
+    <p class="hero-sub">Type, speak, translate. Instantly.</p>
+  </header>
+
+  <!-- ============================================================
+       MAIN TRANSLATOR SECTION
+  ============================================================ -->
+  <main class="translator-section" role="main">
+
+    <!-- ── LANGUAGE SELECTOR BAR ────────────────────────────── -->
+    <div class="lang-bar" role="group" aria-label="Language selection">
+
+      <!-- Source language dropdown -->
+      <div class="lang-select-wrap">
+        <label class="lang-label" for="sourceLang">From</label>
+        <div class="select-shell">
+          <select id="sourceLang" class="lang-select" aria-label="Source language">
+            <!-- Populated by JS -->
+          </select>
+          <i class="ph ph-caret-down select-arrow"></i>
+        </div>
+      </div>
+
+      <!-- Swap languages button -->
+      <button class="swap-btn" id="swapBtn" aria-label="Swap source and target languages" title="Swap languages">
+        <i class="ph ph-arrows-left-right" id="swapIcon"></i>
+      </button>
+
+      <!-- Target language dropdown -->
+      <div class="lang-select-wrap">
+        <label class="lang-label" for="targetLang">To</label>
+        <div class="select-shell">
+          <select id="targetLang" class="lang-select" aria-label="Target language">
+            <!-- Populated by JS -->
+          </select>
+          <i class="ph ph-caret-down select-arrow"></i>
+        </div>
+      </div>
+
+    </div>
+    <!-- /LANGUAGE SELECTOR BAR -->
+
+    <!-- ── TRANSLATION CARDS ────────────────────────────────── -->
+    <div class="cards-row">
+
+      <!-- SOURCE CARD -->
+      <div class="card source-card" id="sourceCard" role="region" aria-label="Source text input">
+
+        <div class="card-header">
+          <span class="card-label">Source Text</span>
+          <!-- Character counter -->
+          <span class="char-counter" id="charCounter" aria-live="polite" aria-label="Character count">
+            <span id="charCount">0</span>
+            <span class="char-limit">/ 5000</span>
+          </span>
+        </div>
+
+        <!-- Main text input area -->
+        <textarea
+          id="sourceText"
+          class="text-area"
+          placeholder="Type or speak something..."
+          maxlength="5000"
+          aria-label="Enter text to translate"
+          spellcheck="true"
+          rows="7"
+        ></textarea>
+
+        <!-- Source card action toolbar -->
+        <div class="card-toolbar">
+          <!-- Voice input button -->
+          <button class="tool-btn mic-btn" id="micBtn" aria-label="Start voice input" title="Voice input">
+            <i class="ph ph-microphone"></i>
+            <span class="mic-ring" id="micRing"></span>
+          </button>
+
+          <!-- Clear source text -->
+          <button class="tool-btn clear-btn" id="clearBtn" aria-label="Clear source text" title="Clear text">
+            <i class="ph ph-x-circle"></i>
+          </button>
+        </div>
+      </div>
+      <!-- /SOURCE CARD -->
+
+      <!-- OUTPUT CARD -->
+      <div class="card output-card" id="outputCard" role="region" aria-label="Translation output">
+
+        <div class="card-header">
+          <span class="card-label">Translation</span>
+          <!-- Detected language indicator -->
+          <span class="detected-lang" id="detectedLang" aria-live="polite"></span>
+        </div>
+
+        <!-- Translation output display -->
+        <div class="output-area" id="outputArea" aria-live="polite" aria-label="Translation result">
+          <!-- Loading skeleton shown during translation -->
+          <div class="loading-skeleton" id="loadingSkeleton" style="display:none;" aria-hidden="true">
+            <div class="skeleton-line"></div>
+            <div class="skeleton-line short"></div>
+            <div class="skeleton-line"></div>
+            <div class="skeleton-line shorter"></div>
+          </div>
+          <!-- Placeholder text when no translation yet -->
+          <span class="output-placeholder" id="outputPlaceholder">Translation appears here...</span>
+          <!-- The actual translated text -->
+          <span class="output-text" id="outputText"></span>
+        </div>
+
+        <!-- Output card action toolbar -->
+        <div class="card-toolbar">
+          <!-- Speak translated text -->
+          <button class="tool-btn speak-btn" id="speakBtn" aria-label="Speak translated text" title="Speak translation" disabled>
+            <i class="ph ph-speaker-high"></i>
+          </button>
+
+          <!-- Copy to clipboard -->
+          <button class="tool-btn copy-btn" id="copyBtn" aria-label="Copy translation to clipboard" title="Copy translation" disabled>
+            <i class="ph ph-copy" id="copyIcon"></i>
+          </button>
+
+          <!-- Download as .txt file -->
+          <button class="tool-btn download-btn" id="downloadBtn" aria-label="Download translation as text file" title="Download translation" disabled>
+            <i class="ph ph-download-simple"></i>
+          </button>
+        </div>
+      </div>
+      <!-- /OUTPUT CARD -->
+
+    </div>
+    <!-- /TRANSLATION CARDS -->
+
+    <!-- ── TRANSLATE CTA BUTTON ──────────────────────────────── -->
+    <div class="cta-row">
+      <button class="translate-btn" id="translateBtn" aria-label="Translate text">
+        <span class="translate-btn-text" id="translateBtnText">Translate</span>
+        <i class="ph ph-arrow-right translate-btn-icon"></i>
+        <!-- Ripple element (created dynamically but anchored here) -->
+      </button>
+    </div>
+
+    <!-- ── ERROR BANNER ──────────────────────────────────────── -->
+    <!-- Hidden by default, shown when API or speech fails -->
+    <div class="error-banner" id="errorBanner" role="alert" aria-live="assertive" style="display:none;">
+      <i class="ph ph-warning-circle"></i>
+      <span id="errorMessage">Something went wrong. Please try again.</span>
+      <button class="error-close" id="errorClose" aria-label="Dismiss error">
+        <i class="ph ph-x"></i>
+      </button>
+    </div>
+
+  </main>
+  <!-- /TRANSLATOR SECTION -->
+
+  <!-- ============================================================
+       HISTORY PANEL
+       Slides up from bottom when toggled; shows past translations
+  ============================================================ -->
+  <aside class="history-panel" id="historyPanel" role="complementary" aria-label="Translation history" aria-hidden="true">
+
+    <div class="history-header">
+      <h2 class="history-title">
+        <i class="ph ph-clock-counter-clockwise"></i>
+        Recent Translations
+      </h2>
+      <div class="history-header-actions">
+        <button class="history-clear-all" id="clearHistoryBtn" aria-label="Clear all history">
+          <i class="ph ph-trash"></i> Clear All
+        </button>
+        <button class="history-close-btn" id="historyCloseBtn" aria-label="Close history panel">
+          <i class="ph ph-x"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- History items injected here by JS -->
+    <div class="history-list" id="historyList" role="list">
+      <!-- Empty state shown when no history -->
+      <div class="history-empty" id="historyEmpty">
+        <i class="ph ph-translate"></i>
+        <p>No translations yet. Start translating!</p>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- Backdrop overlay for history panel on mobile -->
+  <div class="history-backdrop" id="historyBackdrop" aria-hidden="true"></div>
+
+  <!-- ============================================================
+       TOAST NOTIFICATION
+       Small pop-up for success messages (copy, download etc.)
+  ============================================================ -->
+  <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true">
+    <i class="ph ph-check-circle toast-icon"></i>
+    <span id="toastMessage">Copied!</span>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
